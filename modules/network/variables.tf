@@ -71,5 +71,12 @@ variable "public_lb_allowed_ports" {
   type = list(any)
 }
 
+# fss mount point network provisioning
+variable "enable_fss" {
+  type = bool
+}
 
-
+# fss subnet name
+variable "fss_subnet_name" {
+  type = string
+}

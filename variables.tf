@@ -140,6 +140,7 @@ variable "subnets" {
     cp       = { netnum = 2, newbits = 13 }
     int_lb   = { netnum = 16, newbits = 11 }
     pub_lb   = { netnum = 17, newbits = 11 }
+    fss      = { netnum = 18, newbits = 11 }
     workers  = { netnum = 1, newbits = 2 }
   }
   type = map(any)
@@ -379,6 +380,7 @@ variable "availability_domains" {
   default = {
     bastion  = 1
     operator = 1
+    fss = 0
   }
   type = map(any)
 }
@@ -785,6 +787,41 @@ variable "service_account_cluster_role_binding" {
   description = "The cluster role binding name"
   default     = "cluster-admin"
   type        = string
+}
+
+# fss mount point network provisioning
+variable "enable_fss" {
+  description = "Wheather to enable provisioning for FSS"
+  default     = false
+  type        = bool
+}
+
+# subnet in which fss will be provisioned
+variable "fss_subnet_name" {
+  description = "FSS subnet name to be added after lable prefix"
+  default     = "fss"
+  type        = string
+}
+
+# fss mount path
+variable fss_mount_path {
+  description = "FSS mount path to be associated"
+  default     = "/oke_fss"
+  type        = string
+}
+
+# Controls the maximum tbytes, fbytes, and abytes, values reported by NFS FSSTAT calls through any associated mount targets.
+variable max_fs_stat_bytes {
+  description = "Maximum tbytes, fbytes, and abytes, values reported by NFS FSSTAT calls through any associated mount targets"
+  default     = 23843202333
+  type        = number
+}
+
+# Controls the maximum tfiles, ffiles, and afiles values reported by NFS FSSTAT calls through any associated mount targets.
+variable max_fs_stat_files {
+  description = "Maximum tfiles, ffiles, and afiles values reported by NFS FSSTAT"
+  default     = 223442
+  type        = number
 }
 
 # tagging
