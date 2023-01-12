@@ -78,3 +78,15 @@ variable "block_volume_type" {
     error_message = "Accepted values are iscsi or paravirtualized"
   }
 }
+
+variable "allow_autoscaler" {
+  default     = false
+  description = "Whether to add node labels for scheduling of the Kubernetes Cluster Autoscaler on worker nodes with appropriate policies."
+  type        = bool
+}
+
+variable "autoscale" {
+  default     = false
+  description = "Whether to enable autoscaling of worker groups with the Kubernetes Cluster Autoscaler, when enabled and schedulable."
+  type        = bool
+}

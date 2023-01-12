@@ -39,6 +39,8 @@ module "workergroup" {
   label_prefix                    = var.label_prefix
   defined_tags                    = lookup(lookup(var.defined_tags, "oke", {}), "node", {})
   freeform_tags                   = lookup(lookup(var.freeform_tags, "oke", {}), "node", {})
+  allow_autoscaler                = var.allow_autoscaler
+  autoscale                       = var.autoscale
   providers = {
     oci.home = oci.home
   }

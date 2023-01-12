@@ -22,6 +22,7 @@ resource "oci_core_instance_configuration" "instance_configuration" {
       defined_tags = merge(
         local.defined_tags,
         contains(keys(each.value), "defined_tags") ? each.value.defined_tags : {},
+        lookup(each.value, "allow_autoscaler", var.allow_autoscaler) == true ? { "oke.pool" = "autoscaler" } : {},
       )
       freeform_tags = merge(local.freeform_tags, contains(keys(each.value), "freeform_tags") ? each.value.freeform_tags : { worker_group = each.key })
 
@@ -46,6 +47,7 @@ resource "oci_core_instance_configuration" "instance_configuration" {
         oke-initial-node-labels = join(",", [
           for k, v in merge(var.node_labels,
             lookup(each.value, "node_labels", {}),
+            lookup(each.value, "allow_autoscaler", var.allow_autoscaler) == true ? { "app" : "cluster-autoscaler" } : {},
           ) : join("=", [k, v])
         ])
         ssh_authorized_keys = local.ssh_public_key

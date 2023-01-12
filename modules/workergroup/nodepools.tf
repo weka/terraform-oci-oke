@@ -59,6 +59,7 @@ resource "oci_containerengine_node_pool" "node_pools" {
     defined_tags = merge(
       local.defined_tags,
       contains(keys(each.value), "defined_tags") ? each.value.defined_tags : {},
+      lookup(each.value, "allow_autoscaler", var.allow_autoscaler) == true ? { "oke.pool" = "autoscaler" } : {},
     )
     freeform_tags = merge(local.freeform_tags, contains(keys(each.value), "freeform_tags") ? each.value.freeform_tags : { worker_group = each.key })
   }
@@ -112,6 +113,12 @@ resource "oci_containerengine_node_pool" "node_pools" {
       node_config_details["placement_configs"], # dynamic placement configs
       node_source_details                       # dynamic image lookup
     ]
+
+    precondition {
+      condition = !(lookup(each.value, "allow_autoscaler", var.allow_autoscaler) == true
+      && lookup(each.value, "autoscaled", var.autoscale) == true)
+      error_message = "Only one of `allow_autoscaler` and `autoscale` may be enabled for ${each.key}"
+    }
   }
 
   dynamic "initial_node_labels" {
@@ -119,6 +126,14 @@ resource "oci_containerengine_node_pool" "node_pools" {
     content {
       key   = initial_node_labels.key
       value = initial_node_labels.value
+    }
+  }
+
+  dynamic "initial_node_labels" {
+    for_each = lookup(each.value, "allow_autoscaler", var.allow_autoscaler) == true ? [1] : []
+    content {
+      key   = "app"
+      value = "cluster-autoscaler"
     }
   }
 }
