@@ -1,86 +1,58 @@
-# Copyright 2017, 2022 Oracle Corporation and/or affiliates.
+# Copyright (c) 2017, 2023 Oracle Corporation and/or its affiliates.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl
 
-# general oci parameters
-variable "compartment_id" {}
-
-variable "label_prefix" {}
-
-# networking parameters
-variable "ig_route_id" {}
-
-variable "nat_route_id" {}
-
-variable "subnets" {
-  type = map(any)
-}
-
-variable "vcn_id" {}
-
-# cluster endpoint
-
-variable "cni_type" {}
-
 variable "control_plane_type" {
-  type = string
+  default     = "public"
+  description = "Whether to allow public or private access to the control plane endpoint"
+  type        = string
+
+  validation {
+    condition     = contains(["public", "private"], var.control_plane_type)
+    error_message = "Accepted values are public, or private."
+  }
 }
 
-variable "control_plane_allowed_cidrs" {
-  type = list(string)
+variable "cni_type" {
+  # Keep flannel as default so users can upgrade without impact. Give a grace period for users to plan and change
+  default     = "flannel"
+  description = "The CNI for the cluster. Choose between flannel or npn."
+  type        = string
+  validation {
+    condition     = contains(["flannel", "npn"], var.cni_type)
+    error_message = "Accepted values are flannel or npn."
+  }
 }
 
-# oke workers
-
-variable "allow_node_port_access" {
-  type = bool
-}
-
-variable "allow_worker_internet_access" {
-  type = bool
-}
-
-variable "allow_pod_internet_access" {
-  type = bool
-}
-
-variable "allow_worker_ssh_access" {
-  type = bool
-}
-
-variable "assign_dns" {
-  type = bool
-}
-
-variable "worker_type" {}
-
-# load balancers
-
-variable "enable_waf" {
-  type = bool
+variable "worker_type" {
+  default     = "private"
+  description = "Whether to provision public or private workers."
+  type        = string
+  validation {
+    condition     = contains(["public", "private"], var.worker_type)
+    error_message = "Accepted values are public or private."
+  }
 }
 
 variable "load_balancers" {
-  type = string
+  # values: both, internal, public
+  default     = "public"
+  description = "The type of subnets to create for load balancers."
+  type        = string
+  validation {
+    condition     = contains(["public", "internal", "both"], var.load_balancers)
+    error_message = "Accepted values are public, internal or both."
+  }
 }
 
-# internal load balancers
-variable "internal_lb_allowed_cidrs" {
-  type = list(any)
-}
-
-variable "internal_lb_allowed_ports" {
-  type = list(any)
-}
-
-# public load balancers
-variable "public_lb_allowed_cidrs" {
-  type = list(any)
-}
-
-variable "public_lb_allowed_ports" {
-  type = list(any)
-}
-
+# File Storage Service (FSS)
 variable "create_fss" {
-  type = bool
+  description = "Whether to enable provisioning for FSS"
+  default     = false
+  type        = bool
+}
+
+variable "create_operator" {
+  default     = true
+  description = "Whether to create an operator server in a private subnet."
+  type        = bool
 }

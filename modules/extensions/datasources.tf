@@ -1,4 +1,4 @@
-# Copyright 2017, 2021 Oracle Corporation and/or affiliates.
+# Copyright (c) 2017, 2023 Oracle Corporation and/or its affiliates.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl
 
 data "oci_identity_tenancy" "tenancy" {
@@ -14,7 +14,7 @@ data "oci_identity_regions" "home_region" {
 }
 
 data "oci_containerengine_node_pools" "all_node_pools" {
-  compartment_id = var.compartment_id
+  compartment_id = local.compartment_id
   cluster_id     = var.cluster_id
 }
 

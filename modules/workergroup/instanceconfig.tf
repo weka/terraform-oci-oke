@@ -4,8 +4,8 @@
 resource "oci_core_instance_configuration" "instance_configuration" {
   # Create an OCI Instance Configuration resource for each enabled entry of the worker_groups map with a mode that uses one.
   for_each       = local.enabled_instance_configs
-  compartment_id = lookup(each.value, "compartment_id", local.worker_compartment_id)
-  display_name   = join("-", compact([lookup(each.value, "label_prefix", var.label_prefix), each.key]))
+  compartment_id = each.value.compartment_id
+  display_name   = "${each.value.label_prefix}-${each.key}"
 
   instance_details {
     instance_type = "compute"
@@ -18,11 +18,13 @@ resource "oci_core_instance_configuration" "instance_configuration" {
         ? element(tolist(setintersection(each.value.placement_ads, local.ad_numbers)), 1)
         : element(local.ad_numbers, 1)
       ), "")
-      compartment_id = lookup(each.value, "compartment_id", local.worker_compartment_id)
+      compartment_id = each.value.compartment_id
       defined_tags = merge(
         local.defined_tags,
-        contains(keys(each.value), "defined_tags") ? each.value.defined_tags : {},
-        lookup(each.value, "allow_autoscaler", var.allow_autoscaler) == true ? { "oke.pool" = "autoscaler" } : {},
+        #contains(keys(each.value), "defined_tags") ? each.value.defined_tags : {},
+        lookup(each.value, "defined_tags", {}),
+        var.create_tags ? { "${var.tag_namespace}.state_id" = "${var.state_id}" } : {},
+        var.create_tags && each.value.allow_autoscaler == true ? { "${var.tag_namespace}.pool" = "autoscaler" } : {},
       )
       freeform_tags = merge(local.freeform_tags, contains(keys(each.value), "freeform_tags") ? each.value.freeform_tags : { worker_group = each.key })
 
@@ -32,9 +34,9 @@ resource "oci_core_instance_configuration" "instance_configuration" {
 
       create_vnic_details {
         assign_private_dns_record = var.assign_dns
-        assign_public_ip          = lookup(each.value, "assign_public_ip", var.assign_public_ip)
-        nsg_ids                   = contains(keys(each.value), "nsg_ids") ? each.value.nsg_ids : var.worker_nsg_ids
-        subnet_id                 = lookup(each.value, "primary_subnet_id", var.primary_subnet_id)
+        assign_public_ip          = each.value.assign_public_ip
+        nsg_ids                   = each.value.worker_nsgs
+        subnet_id                 = each.value.subnet_id
       }
 
       metadata = {
@@ -45,32 +47,29 @@ resource "oci_core_instance_configuration" "instance_configuration" {
         oke-kubeproxy-proxy-mode = var.kubeproxy_mode
         oke-tenancy-id           = local.tenancy_id
         oke-initial-node-labels = join(",", [
-          for k, v in merge(var.node_labels,
-            lookup(each.value, "node_labels", {}),
-            lookup(each.value, "allow_autoscaler", var.allow_autoscaler) == true ? { "app" : "cluster-autoscaler" } : {},
+          for k, v in merge(var.node_labels, each.value.node_labels,
+            each.value.allow_autoscaler == true ? { "app" : "cluster-autoscaler" } : {},
           ) : join("=", [k, v])
         ])
         ssh_authorized_keys = local.ssh_public_key
         user_data           = data.cloudinit_config.worker_per_boot.rendered
       }
 
-      shape = lookup(each.value, "shape", local.shape)
+      shape = each.value.shape
 
       dynamic "shape_config" {
-        for_each = length(regexall("Flex", lookup(each.value, "shape", local.shape))) > 0 ? [1] : []
+        for_each = length(regexall("Flex", each.value.shape)) > 0 ? [1] : []
         content {
-          ocpus = max(1, lookup(each.value, "ocpus", local.ocpus))
+          ocpus = each.value.ocpus
           memory_in_gbs = ( # If > 64GB memory/core, correct input to exactly 64GB memory/core
-            (lookup(each.value, "memory", local.memory) / lookup(each.value, "ocpus", local.ocpus)) > 64
-            ? (lookup(each.value, "ocpus", local.ocpus) * 64)
-            : lookup(each.value, "memory", local.memory)
+            (each.value.memory / each.value.ocpus) > 64 ? each.value.ocpus * 64 : each.value.memory
           )
         }
       }
 
       source_details {
-        boot_volume_size_in_gbs = lookup(each.value, "boot_volume_size", local.boot_volume_size)
-        image_id                = lookup(each.value, "image_id", var.image_id)
+        boot_volume_size_in_gbs = each.value.boot_volume_size
+        image_id                = each.value.image_id
         source_type             = "image"
       }
 
@@ -84,9 +83,9 @@ resource "oci_core_instance_configuration" "instance_configuration" {
       }
 
       create_details {
-        display_name   = join("-", compact([lookup(each.value, "label_prefix", var.label_prefix), each.key]))
+        display_name   = "${each.value.label_prefix}-${each.key}"
         kms_key_id     = var.volume_kms_key_id
-        compartment_id = lookup(each.value, "compartment_id", local.worker_compartment_id)
+        compartment_id = each.value.compartment_id
       }
     }
   }
@@ -102,5 +101,10 @@ resource "oci_core_instance_configuration" "instance_configuration" {
       instance_details[0].launch_details[0].defined_tags,
       instance_details[0].launch_details[0].freeform_tags,
     ]
+
+    precondition {
+      condition     = each.value.autoscale != true
+      error_message = "Cluster autoscaler management (`autoscale: true`) is currently only supported for `mode: node-pool` on group: `${each.key}`."
+    }
   }
 }

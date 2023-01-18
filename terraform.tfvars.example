@@ -1,4 +1,4 @@
-# Copyright 2017, 2022 Oracle Corporation and/or affiliates.
+# Copyright (c) 2017, 2023 Oracle Corporation and/or its affiliates.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl
 
 # Identity and access parameters
@@ -81,9 +81,9 @@ vcn_name                     = "vcnoke"
 vcn_display_name             = ""
 vcn_id                       = ""
 ig_route_table_display_name  = ""
-ig_route_table_id            = ""
+ig_route_id                  = ""
 nat_route_table_display_name = ""
-nat_route_table_id           = ""
+nat_route_id                 = ""
 
 
 # bastion host
@@ -178,7 +178,6 @@ pods_cidr                    = "10.244.0.0/16"
 services_cidr                = "10.96.0.0/16"
 
 ## oke cluster kms integration
-use_cluster_encryption = false
 cluster_kms_key_id     = ""
 create_policies        = true
 

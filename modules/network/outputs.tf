@@ -1,4 +1,4 @@
-# Copyright 2017, 2021 Oracle Corporation and/or affiliates.
+# Copyright (c) 2017, 2023 Oracle Corporation and/or its affiliates.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl
 
 output "subnet_ids" {
@@ -35,7 +35,7 @@ output "pub_lb" {
 }
 
 output "pod_nsg_id" {
-  value = tolist([oci_core_network_security_group.pods[*].id])
+  value = one(oci_core_network_security_group.pods[*].id)
 }
 
 output "worker_nsg_id" {

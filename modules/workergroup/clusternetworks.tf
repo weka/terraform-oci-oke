@@ -5,15 +5,15 @@
 resource "oci_core_cluster_network" "cluster_networks" {
   # Create an OCI Cluster Network resource for each enabled entry of the worker_groups map with that mode.
   for_each       = local.enabled_cluster_networks
-  compartment_id = lookup(each.value, "compartment_id", local.worker_compartment_id)
-  display_name   = join("-", compact([lookup(each.value, "label_prefix", var.label_prefix), each.key]))
-  defined_tags   = merge(coalesce(local.defined_tags, {}), contains(keys(each.value), "defined_tags") ? each.value.defined_tags : {})
-  freeform_tags  = merge(coalesce(local.freeform_tags, {}), contains(keys(each.value), "freeform_tags") ? each.value.freeform_tags : { worker_group = each.key })
+  compartment_id = each.value.compartment_id
+  display_name   = "${each.value.label_prefix}-${each.key}"
+  defined_tags   = merge(local.defined_tags, contains(keys(each.value), "defined_tags") ? each.value.defined_tags : {})
+  freeform_tags  = merge(local.freeform_tags, contains(keys(each.value), "freeform_tags") ? each.value.freeform_tags : { worker_group = each.key })
 
   instance_pools {
     instance_configuration_id = oci_core_instance_configuration.instance_configuration[each.key].id
     display_name              = join("-", compact([lookup(each.value, "label_prefix", var.label_prefix), each.key]))
-    size                      = max(0, lookup(each.value, "size", local.size))
+    size                      = each.value.size
     defined_tags              = merge(coalesce(local.defined_tags, {}), contains(keys(each.value), "defined_tags") ? each.value.defined_tags : {})
     freeform_tags             = merge(coalesce(local.freeform_tags, {}), contains(keys(each.value), "freeform_tags") ? each.value.freeform_tags : { worker_group = each.key })
   }
@@ -26,7 +26,7 @@ resource "oci_core_cluster_network" "cluster_networks" {
       ? element(tolist(setintersection(each.value.placement_ads, local.ad_numbers)), 1)
       : element(local.ad_numbers, 1)
     ), local.first_ad_name)
-    primary_subnet_id = lookup(each.value, "primary_subnet_id", var.primary_subnet_id)
+    primary_subnet_id = each.value.subnet_id
   }
 
   lifecycle {

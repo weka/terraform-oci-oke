@@ -3,12 +3,12 @@
 
 output "cluster_id" {
   description = "ID of the Kubernetes cluster"
-  value       = module.oke.cluster_id
+  value       = one(module.oke[*].cluster_id)
 }
 
 output "nodepool_ids" {
   description = "Map of Nodepool names and IDs"
-  value       = length(module.oke.nodepool_ids) > 0 ? module.oke.nodepool_ids : null
+  value       = one(module.oke[*].nodepool_ids)
 }
 
 output "ig_route_id" {
@@ -53,8 +53,6 @@ output "drg_id" {
   value       = var.create_drg || var.drg_id != null ? module.drg[0].drg_id : null
 }
 
-# convenient output
-
 output "bastion_public_ip" {
   description = "public ip address of bastion host"
   value       = length(local.bastion_public_ip) > 0 ? local.bastion_public_ip : null
@@ -85,5 +83,5 @@ output "fss_id" {
 
 output "cluster_endpoints" {
   description = "Endpoints for the Kubernetes cluster"
-  value       = module.oke.endpoints
+  value       = one(module.oke[*].endpoints)
 }

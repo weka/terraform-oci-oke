@@ -5,12 +5,12 @@
 resource "oci_core_instance_pool" "instance_pools" {
   # Create an OCI Instance Pool resource for each enabled entry of the worker_groups map with that mode.
   for_each                  = local.enabled_instance_pools
-  compartment_id            = lookup(each.value, "compartment_id", local.worker_compartment_id)
-  display_name              = join("-", compact([lookup(each.value, "label_prefix", var.label_prefix), each.key]))
-  size                      = max(0, lookup(each.value, "size", local.size))
+  compartment_id            = each.value.compartment_id
+  display_name              = "${each.value.label_prefix}-${each.key}-${var.state_id}"
+  size                      = each.value.size
   instance_configuration_id = oci_core_instance_configuration.instance_configuration[each.key].id
-  defined_tags              = merge(coalesce(local.defined_tags, {}), contains(keys(each.value), "defined_tags") ? each.value.defined_tags : {})
-  freeform_tags             = merge(coalesce(local.freeform_tags, {}), contains(keys(each.value), "freeform_tags") ? each.value.freeform_tags : { worker_group = each.key })
+  defined_tags              = merge(local.defined_tags, contains(keys(each.value), "defined_tags") ? each.value.defined_tags : {})
+  freeform_tags             = merge(local.freeform_tags, contains(keys(each.value), "freeform_tags") ? each.value.freeform_tags : { worker_group = each.key })
 
   dynamic "placement_configurations" {
     # Define each configured availability domain for placement, with bounds on # available
@@ -18,15 +18,18 @@ resource "oci_core_instance_pool" "instance_pools" {
     iterator = ad_number
     for_each = (contains(keys(each.value), "placement_ads")
       ? tolist(setintersection(each.value.placement_ads, local.ad_numbers))
-    : local.ad_numbers)
+      : local.ad_numbers
+    )
 
     content {
       availability_domain = lookup(local.ad_number_to_name, ad_number.value, local.first_ad_name)
-      primary_subnet_id   = lookup(each.value, "primary_subnet_id", var.primary_subnet_id)
+      primary_subnet_id   = each.value.subnet_id
     }
   }
 
   lifecycle {
+    # TODO Conditionally ignore `size` when `autoscale = true` after resolved:
+    # https://github.com/hashicorp/terraform/issues/24188
     ignore_changes = [
       display_name, defined_tags, freeform_tags,
       placement_configurations,

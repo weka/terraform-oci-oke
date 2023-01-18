@@ -1,4 +1,4 @@
-# Copyright 2017, 2022 Oracle Corporation and/or affiliates.
+# Copyright (c) 2017, 2023 Oracle Corporation and/or its affiliates.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl
 
 locals {
@@ -17,19 +17,19 @@ locals {
   apiserver_private_endpoint = lookup(local.cluster_endpoint, "private_endpoint", "")
 
   # dynamic group all oke clusters in a compartment
-  dynamic_group_rule_all_clusters = "ALL {resource.type = 'cluster', resource.compartment.id = '${var.compartment_id}'}"
+  dynamic_group_rule_all_clusters = "ALL {resource.type = 'cluster', resource.compartment.id = '${local.compartment_id}'}"
 
   # number of expected worker nodes from configured node pools
   expected_node_count = (length(var.node_pools) == 0 ? 0 :
-    sum([for k, v in var.node_pools : max(0, lookup(v, "node_pool_size", 0))]))
+  sum([for k, v in var.node_pools : max(0, lookup(v, "node_pool_size", 0))]))
 
   # policy to allow dynamic group of all clusters to use kms 
-  cluster_kms_policy_statement = (var.use_cluster_encryption == true && var.create_policies) ? "Allow dynamic-group ${oci_identity_dynamic_group.oke_kms_cluster[0].name} to use keys in compartment id ${var.compartment_id} where target.key.id = '${var.cluster_kms_key_id}'" : ""
+  cluster_kms_policy_statement = coalesce(var.cluster_kms_key_id, "none") != "none" && var.create_policies ? "Allow dynamic-group ${oci_identity_dynamic_group.oke_kms_cluster[0].name} to use keys in compartment id ${local.compartment_id} where target.key.id = '${var.cluster_kms_key_id}'" : ""
 
   # policy to allow block volumes inside oke to use kms
-  oke_volume_kms_policy_statements = (var.use_node_pool_volume_encryption == true && var.create_policies) ? [
-    "Allow service oke to use key-delegates in compartment id ${var.compartment_id} where target.key.id = '${var.node_pool_volume_kms_key_id}'",
-    "Allow service blockstorage to use keys in compartment id ${var.compartment_id} where target.key.id = '${var.node_pool_volume_kms_key_id}'"
+  oke_volume_kms_policy_statements = coalesce(var.node_pool_volume_kms_key_id, "none") != "none" && var.create_policies ? [
+    "Allow service oke to use key-delegates in compartment id ${local.compartment_id} where target.key.id = '${var.node_pool_volume_kms_key_id}'",
+    "Allow service blockstorage to use keys in compartment id ${local.compartment_id} where target.key.id = '${var.node_pool_volume_kms_key_id}'"
   ] : []
 
   # 1. get a list of available images for this cluster
@@ -38,7 +38,7 @@ locals {
   node_pool_image_ids = data.oci_containerengine_node_pool_option.node_pool_options.sources
 
   # kubernetes string version length
-  k8s_version_length = length(var.cluster_kubernetes_version)
-  k8s_version_only = substr(var.cluster_kubernetes_version,1,local.k8s_version_length)
+  k8s_version_length = length(var.kubernetes_version)
+  k8s_version_only   = substr(var.kubernetes_version, 1, local.k8s_version_length)
 
 }

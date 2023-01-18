@@ -1,7 +1,27 @@
 # Copyright (c) 2017, 2022 Oracle Corporation and/or its affiliates.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl
 
+locals {
+  calico_env_template = templatefile("${path.module}/scripts/calico_env.sh",
+    {
+      mode              = var.calico_mode
+      version           = var.calico_version
+      cni_type          = var.cni_type
+      mtu               = var.calico_mtu
+      pod_cidr          = var.pods_cidr
+      url               = var.calico_url
+      apiserver_enabled = var.calico_apiserver_enabled
+      typha_enabled     = var.typha_enabled || var.expected_node_count > 50
+
+      # Use provided value if set, otherwise use 1 replica for every 50 nodes with a min of 1 if enabled, and max of 20 replicas
+      typha_replicas = (var.typha_replicas > 0) ? var.typha_replicas : max(min(20, floor(var.expected_node_count / 50)), var.typha_enabled ? 1 : 0)
+    }
+  )
+}
+
 resource "null_resource" "install_calico" {
+  count = local.post_provisioning_ops && var.enable_calico ? 1 : 0
+
   connection {
     host        = var.operator_private_ip
     private_key = local.ssh_private_key
@@ -14,7 +34,7 @@ resource "null_resource" "install_calico" {
     bastion_private_key = local.ssh_private_key
   }
 
-  depends_on = [null_resource.install_k8stools_on_operator, null_resource.write_kubeconfig_on_operator]
+  depends_on = [null_resource.write_kubeconfig_on_operator]
 
   provisioner "remote-exec" {
     inline = [
@@ -57,6 +77,4 @@ resource "null_resource" "install_calico" {
     typha_enabled            = var.typha_enabled
     typha_replicas           = var.typha_replicas
   }
-
-  count = local.post_provisioning_ops == true && var.install_calico == true ? 1 : 0
 }

@@ -1,5 +1,5 @@
 #!/bin/bash
-# Copyright 2021 Oracle Corporation and/or affiliates.
+# Copyright (c) 2021, 2023 Oracle Corporation and/or its affiliates.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl
 
 kubectl config set-credentials "user-${cluster-id-11}" --exec-command="$HOME/bin/token_helper.sh" \
@@ -11,4 +11,4 @@ kubectl config set-credentials "user-${cluster-id-11}" --exec-command="$HOME/bin
   --exec-arg="--region" \
   --exec-arg="${region}"
 
-kubectx ${cluster_name}=$(kubectl config current-context)
+kubectx default=$(kubectl config current-context)

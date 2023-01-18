@@ -1,6 +1,22 @@
 # Copyright (c) 2022, 2023 Oracle Corporation and/or its affiliates.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl
 
+variable "worker_group_enabled" {
+  default     = true
+  description = "Default for whether to apply resources for a group"
+  type        = bool
+}
+
+variable "worker_group_mode" {
+  default     = "node-pool"
+  description = "Default management mode for worker groups when unspecified"
+  type        = string
+  validation {
+    condition     = contains(["node-pool", "instance-pool", "cluster-network"], var.worker_group_mode)
+    error_message = "Accepted values are node-pool, instance-pool, or cluster-network"
+  }
+}
+
 variable "cluster_dns" {
   default     = "10.96.5.5"
   description = "Cluster DNS resolver IP address"
@@ -9,13 +25,13 @@ variable "cluster_dns" {
 
 variable "cluster_id" {
   default     = ""
-  description = "An existing OKE cluster ID when `mode = node-pool`"
+  description = "The OKE cluster ID to which nodes in a worker group should join on startup. Discovered automatically for a cluster managed in the same Terraform state."
   type        = string
 }
 
 variable "cluster_ca_cert" {
   default     = ""
-  description = "Required for unmanaged instance pools for secure control plane connection"
+  description = "Cluster CA certificate. Required for Self-managed instance pools for secure control plane connection."
   type        = string
 }
 
@@ -31,26 +47,10 @@ variable "worker_group_boot_volume_size" {
   type        = number
 }
 
-variable "worker_group_enabled" {
-  default     = true
-  description = "Whether to apply resources for a group when unspecified"
-  type        = bool
-}
-
 variable "worker_groups" {
   default     = {}
   description = "Tuple of OKE worker groups where each key maps to the OCID of an OCI resource, and value contains its definition"
   type        = any
-}
-
-variable "worker_group_mode" {
-  default     = "node-pool"
-  description = "Default management mode for worker groups when unspecified"
-  type        = string
-  validation {
-    condition     = contains(["node-pool", "instance-pool", "cluster-network"], var.worker_group_mode)
-    error_message = "Accepted values are node-pool, instance-pool, or cluster-network"
-  }
 }
 
 variable "worker_group_size" {
@@ -93,7 +93,7 @@ variable "worker_group_image_type" {
   }
 }
 
-variable "worker_group_primary_subnet_id" {
+variable "worker_group_subnet_id" {
   default     = ""
   description = "The subnet OCID used for instances"
   type        = string

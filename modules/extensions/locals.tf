@@ -1,14 +1,7 @@
-# Copyright 2017, 2022 Oracle Corporation and/or affiliates.
+# Copyright (c) 2017, 2023 Oracle Corporation and/or its affiliates.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl
 
 locals {
-  ssh_private_key = (
-    var.ssh_private_key != ""
-    ? try(base64decode(var.ssh_private_key), var.ssh_private_key)
-    : var.ssh_private_key_path != "none"
-    ? file(var.ssh_private_key_path)
-  : null)
-
   service_account_cluster_role_binding_name = var.service_account_cluster_role_binding == "" ? "${var.service_account_name}-crb" : var.service_account_cluster_role_binding
 
   # 1. get a list of available images for this cluster
@@ -23,7 +16,7 @@ locals {
 
   post_provisioning_ops = var.create_bastion_host == true && var.bastion_state == "RUNNING" && var.create_operator == true && var.operator_state == "RUNNING" && var.enable_operator_instance_principal == true ? true : false
 
-  dynamic_group_rule_this_cluster = (var.use_cluster_encryption == true) ? "ALL {resource.type = 'cluster', resource.id = '${var.cluster_id}'}" : "null"
+  dynamic_group_rule_this_cluster = coalesce(var.cluster_kms_key_id, "none") != "none" ? "ALL {resource.type = 'cluster', resource.id = '${var.cluster_id}'}" : "null"
 
   dynamic_group_prefix = (var.label_prefix == "none") ? "" : "${var.label_prefix}"
 }

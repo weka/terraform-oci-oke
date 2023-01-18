@@ -1,0 +1,1 @@
+../../variables-bastion.tf

@@ -1,13 +1,13 @@
-# Copyright 2017, 2021 Oracle Corporation and/or affiliates.
+# Copyright (c) 2017, 2023 Oracle Corporation and/or its affiliates.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl
 
 resource "oci_containerengine_node_pool" "nodepools" {
   for_each       = var.node_pools
   cluster_id     = oci_containerengine_cluster.k8s_cluster.id
-  compartment_id = var.compartment_id
+  compartment_id = local.compartment_id
   depends_on     = [oci_containerengine_cluster.k8s_cluster]
 
-  kubernetes_version = var.cluster_kubernetes_version
+  kubernetes_version = var.kubernetes_version
   name               = var.label_prefix == "none" ? each.key : "${var.label_prefix}-${each.key}"
 
   freeform_tags = merge(lookup(var.freeform_tags, "node_pool", {}), lookup(each.value, "nodepool_freeform_tags", {}))
@@ -114,7 +114,7 @@ resource "oci_containerengine_node_pool" "nodepools" {
   }
   node_shape = lookup(each.value, "shape", "VM.Standard.E4.Flex")
 
-  ssh_public_key = (var.ssh_public_key != "") ? var.ssh_public_key : (var.ssh_public_key_path != "none") ? file(var.ssh_public_key_path) : ""
+  ssh_public_key = local.ssh_public_key
 
   # do not destroy the node pool if the kubernetes version has changed as part of the upgrade
 

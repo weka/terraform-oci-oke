@@ -13,7 +13,8 @@ locals {
     ? try(base64decode(var.api_private_key), var.api_private_key)
     : var.api_private_key_path != ""
     ? file(var.api_private_key_path)
-  : null)
+    : null
+  )
 }
 
 # Overrides Resource Manager
@@ -121,4 +122,40 @@ variable "create_policies" {
   default     = true
   description = "Whether to create Dynamic Group and Policy IAM resources for extra permissions."
   type        = bool
+}
+
+variable "create_self_managed_policy" {
+  default     = false
+  description = "Whether to create IAM policy for Self-managed worker nodes."
+  type        = bool
+}
+
+variable "create_autoscaler_policy" {
+  default     = false
+  description = "Whether to create IAM policy for Cluster Autoscaler management."
+  type        = bool
+}
+
+variable "create_operator_policy" {
+  default     = false
+  description = "Whether to create IAM policy for operator access to the OKE control plane."
+  type        = bool
+}
+
+variable "create_kms_policy" {
+  default     = false
+  description = "Whether to create IAM policy for cluster autoscaler."
+  type        = bool
+}
+
+variable "create_tags" {
+  default     = false
+  description = "Whether to create a defined namespace with tags for IAM policy."
+  type        = bool
+}
+
+variable "tag_namespace" {
+  default     = "oke"
+  description = "The tag namespace for standard OKE defined tags - disabled if empty, and created if missing."
+  type        = string
 }

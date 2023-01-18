@@ -1,7 +1,8 @@
-# Copyright 2017, 2021 Oracle Corporation and/or affiliates.
+# Copyright (c) 2017, 2023 Oracle Corporation and/or its affiliates.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl
+
 resource "oci_core_security_list" "control_plane_seclist" {
-  compartment_id = var.compartment_id
+  compartment_id = local.compartment_id
   display_name   = var.label_prefix == "none" ? "control-plane" : "${var.label_prefix}-control-plane"
   vcn_id         = var.vcn_id
 

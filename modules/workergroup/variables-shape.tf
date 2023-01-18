@@ -24,9 +24,3 @@ variable "shape" {
   description = "Default shape for instance pools"
   type        = string
 }
-
-variable "size" {
-  default     = 0
-  description = "Default number of desired nodes for created worker groups"
-  type        = number
-}

@@ -1,17 +1,26 @@
 # Copyright (c) 2022, 2023 Oracle Corporation and/or its affiliates.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl
 
+locals {
+  worker_image_id = (length(var.worker_group_image_id) > 0 ? var.worker_group_image_id
+  : var.node_pool_image_id != "none" ? var.node_pool_image_id : "")
+  worker_image_type = (length(var.worker_group_image_type) > 0 ? var.worker_group_image_type
+  : var.node_pool_image_type != "none" ? var.node_pool_image_type : "")
+}
+
 # Default workergroup sub-module implementation for OKE cluster
 module "workergroup" {
   source                          = "./modules/workergroup"
+  state_id                        = random_id.state_id.id
   config_file_profile             = var.config_file_profile
   worker_groups                   = var.worker_groups
   tenancy_id                      = local.tenancy_id
   compartment_id                  = local.worker_compartment_id
   region                          = var.region
-  cluster_id                      = coalesce(var.cluster_id, module.oke.cluster_id)
-  apiserver_private_host          = try(split(":", module.oke.endpoints[0].private_endpoint)[0], "")
-  apiserver_public_host           = try(split(":", module.oke.endpoints[0].public_endpoint)[0], "")
+  cluster_id                      = coalesce(var.cluster_id, one(module.oke[*].cluster_id))
+  cni_type                        = var.cni_type
+  apiserver_private_host          = try(split(":", module.oke[0].endpoints[0].private_endpoint)[0], "")
+  apiserver_public_host           = try(split(":", module.oke[0].endpoints[0].public_endpoint)[0], "")
   image_id                        = local.worker_image_id
   image_type                      = local.worker_image_type
   os                              = var.node_pool_os
@@ -27,10 +36,10 @@ module "workergroup" {
   enable_pv_encryption_in_transit = var.enable_pv_encryption_in_transit
   cluster_ca_cert                 = var.cluster_ca_cert
   kubernetes_version              = var.kubernetes_version
-  pod_nsg_ids                     = try(split(",", lookup(module.network.nsg_ids, "pods", "")), [])
-  worker_nsg_ids                  = coalescelist(var.worker_nsgs, try(split(",", lookup(module.network.nsg_ids, "workers", "")), []))
+  pod_nsgs                        = try(split(",", lookup(module.network.nsg_ids, "pods", "")), [])
+  worker_nsgs                     = coalescelist(var.worker_nsgs, try(split(",", lookup(module.network.nsg_ids, "workers", "")), []))
   assign_public_ip                = var.worker_type == "public"
-  primary_subnet_id               = coalesce(var.worker_group_primary_subnet_id, lookup(module.network.subnet_ids, "workers", ""))
+  subnet_id                       = coalesce(var.worker_group_subnet_id, lookup(module.network.subnet_ids, "workers", ""))
   sriov_num_vfs                   = var.sriov_num_vfs
   ssh_public_key                  = var.ssh_public_key
   ssh_public_key_path             = var.ssh_public_key_path

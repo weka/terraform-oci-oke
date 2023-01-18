@@ -7,24 +7,6 @@ variable "enabled" {
   type        = bool
 }
 
-variable "defined_tags" {
-  type        = map(string)
-  description = "Tags to apply to created resources"
-  default     = {}
-}
-
-variable "freeform_tags" {
-  type        = map(string)
-  description = "Tags to apply to created resources"
-  default     = {}
-}
-
-variable "node_labels" {
-  default     = {}
-  description = "Default Kubernetes node labels applied to worker groups, merged with group-level labels."
-  type        = map(string)
-}
-
 variable "mode" {
   default     = "node-pool"
   description = "Default management mode for worker groups when unspecified"
@@ -35,38 +17,44 @@ variable "mode" {
   }
 }
 
+variable "size" {
+  default     = 0
+  description = "Default number of desired nodes for created worker groups"
+  type        = number
+  validation {
+    condition     = var.size >= 0
+    error_message = "Default worker group size must be >= 0"
+  }
+}
+
+variable "defined_tags" {
+  default     = {}
+  description = "Tags to apply to created resources"
+  type        = map(string)
+}
+
+variable "freeform_tags" {
+  default     = {}
+  description = "Tags to apply to created resources"
+  type        = map(string)
+}
+
+variable "node_labels" {
+  default     = {}
+  description = "Default Kubernetes node labels applied to worker groups, merged with group-level labels."
+  type        = map(string)
+}
+
 variable "timezone" {
   default     = "Etc/UTC"
   description = "The preferred timezone for the worker nodes"
   type        = string
 }
 
-variable "worker_groups" {
-  default     = {}
-  description = "Tuple of OKE worker groups where each key maps to the OCID of an OCI resource, and value contains its definition"
-  type        = any
-}
-
-variable "enable_pv_encryption_in_transit" {
-  default     = false
-  description = "Whether to enable in-transit encryption for the data volume's paravirtualized attachment. This field applies to both block volumes and boot volumes."
-  type        = bool
-}
-
 variable "volume_kms_key_id" {
   default     = ""
   description = "The OCID of the OCI KMS key to be used as the master encryption key for Boot Volume and Block Volume encryption. Oracle-managed encryption if null."
   type        = string
-}
-
-variable "kubeproxy_mode" {
-  default     = "iptables"
-  description = "The kube-proxy mode to use for a worker node."
-  type        = string
-  validation {
-    condition     = contains(["iptables", "ipvs"], var.kubeproxy_mode)
-    error_message = "Accepted values are iptables or ipvs."
-  }
 }
 
 variable "block_volume_type" {
@@ -79,14 +67,19 @@ variable "block_volume_type" {
   }
 }
 
-variable "allow_autoscaler" {
+variable "assign_public_ip" {
   default     = false
-  description = "Whether to add node labels for scheduling of the Kubernetes Cluster Autoscaler on worker nodes with appropriate policies."
+  description = "Whether to assign public IP addresses to worker nodes"
   type        = bool
 }
 
-variable "autoscale" {
-  default     = false
-  description = "Whether to enable autoscaling of worker groups with the Kubernetes Cluster Autoscaler, when enabled and schedulable."
-  type        = bool
+variable "subnet_id" {
+  description = "The subnet OCID used for instances"
+  type        = string
+}
+
+variable "pod_subnet_id" {
+  default     = ""
+  description = "The subnet OCID used for pods when cni_type = npn"
+  type        = string
 }

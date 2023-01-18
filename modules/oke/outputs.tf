@@ -1,4 +1,4 @@
-# Copyright 2017, 2022 Oracle Corporation and/or affiliates.
+# Copyright (c) 2017, 2023 Oracle Corporation and/or its affiliates.
 # Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl
 
 output "apiserver_private_endpoint" {
@@ -11,7 +11,7 @@ output "cluster_id" {
 }
 
 output "cluster_kms_dynamic_group_id" {
-  value = var.use_cluster_encryption == true && var.create_policies ? oci_identity_dynamic_group.oke_kms_cluster[0].id : "null"
+  value = coalesce(var.cluster_kms_key_id, "none") != "none" && var.create_policies ? oci_identity_dynamic_group.oke_kms_cluster[0].id : null
 }
 
 output "expected_node_count" {
