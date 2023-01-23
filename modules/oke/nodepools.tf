@@ -125,7 +125,7 @@ resource "oci_containerengine_node_pool" "nodepools" {
       node_metadata,                            # templated cloud-init
       node_config_details[0].placement_configs, # dynamic placement configs
       node_source_details,                      # dynamic image lookup
-      node_source_details.size
+      node_source_details[0].size
     ]
   }
 
