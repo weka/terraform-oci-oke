@@ -159,8 +159,24 @@ resource "oci_core_security_list" "oke" {
   lifecycle {
     ignore_changes = [
       freeform_tags, defined_tags, display_name, vcn_id,
-      ingress_security_rules, egress_security_rules, # ignore for CCM-management
+      egress_security_rules, # ignore for CCM-management
     ]
+  }
+
+  dynamic "ingress_security_rules" {
+    iterator = port
+    for_each = each.key == "pub_lb" ? ["443", "80"] : []
+    content {
+      protocol = "6"
+      source = "0.0.0.0/0"
+      source_type = "CIDR_BLOCK"
+      tcp_options {
+        source_port_range {
+          max = port.value
+          min = port.value
+        }
+      }
+    }
   }
 }
 
