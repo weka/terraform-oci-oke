@@ -45,6 +45,10 @@ locals {
       "Allow ICMP ingress to workers for path discovery" : {
         protocol = local.icmp_protocol, port = local.all_ports, source = local.anywhere, source_type = local.rule_type_cidr,
       },
+
+      "Allow 14000" : {
+        protocol = local.tcp_protocol, port = 14000, source = local.worker_nsg_id, source_type = local.rule_type_cidr,
+      },
     },
 
     local.pod_nsg_enabled ? {
