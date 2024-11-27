@@ -26,7 +26,7 @@ locals {
         protocol = local.icmp_protocol, port = local.all_ports, destination = local.worker_nsg_id, destination_type = local.rule_type_nsg,
       },
       "Allow TCP ingress from the world to load balancers" : {
-        protocol = local.tcp_protocol, port = local.all_ports, source = local.all_ports, source_type = local.rule_type_cidr,
+        protocol = local.tcp_protocol, port = local.all_ports, source = local.anywhere, source_type = local.rule_type_cidr,
       },
       "Allow TCP ingress from the VCN to load balancers" : {
         protocol = local.tcp_protocol, port = local.all_ports, source = "10.0.0.0/16", source_type = local.rule_type_cidr,
