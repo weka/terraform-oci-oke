@@ -25,6 +25,18 @@ locals {
       "Allow ICMP egress from public load balancers to worker nodes for path discovery" : {
         protocol = local.icmp_protocol, port = local.all_ports, destination = local.worker_nsg_id, destination_type = local.rule_type_nsg,
       },
+      "Allow TCP ingress from the world to load balancers" : {
+        protocol = local.tcp_protocol, port = local.all_ports, source = local.all_ports, source_type = local.rule_type_cidr,
+      },
+      "Allow TCP ingress from the VCN to load balancers" : {
+        protocol = local.tcp_protocol, port = local.all_ports, source = "10.0.0.0/16", source_type = local.rule_type_cidr,
+      },
+      "Allow TCP egress from public load balancers to the world" : {
+        protocol = local.tcp_protocol, port = local.all_ports, destination = local.all_ports, destination_type = local.rule_type_cidr,
+      },
+      "Allow TCP egress from public load balancers to VCN" : {
+        protocol = local.tcp_protocol, port = local.all_ports, destination = "10.0.0.0/16", destination_type = local.rule_type_cidr,
+      },
     },
     var.enable_waf ? local.waf_rules : {},
     var.allow_rules_public_lb,
