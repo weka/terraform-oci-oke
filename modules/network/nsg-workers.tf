@@ -70,6 +70,9 @@ locals {
       "Allow TCP ingress to workers from internal load balancers" : {
         protocol = local.tcp_protocol, port_min = local.node_port_min, port_max = local.node_port_max, source = local.int_lb_nsg_id, source_type = local.rule_type_nsg,
       },
+      "Allow UDP ingress to workers from internal load balancers" : {
+        protocol = local.udp_protocol, port_min = local.node_port_min, port_max = local.node_port_max, source = local.int_lb_nsg_id, source_type = local.rule_type_nsg,
+      },
       "Allow TCP ingress to workers for health check from internal load balancers" : {
         protocol = local.tcp_protocol, port = local.health_check_port, source = local.int_lb_nsg_id, source_type = local.rule_type_nsg,
       },
@@ -78,6 +81,9 @@ locals {
     local.pub_lb_nsg_enabled ? {
       "Allow TCP ingress to workers from public load balancers" : {
         protocol = local.tcp_protocol, port_min = local.node_port_min, port_max = local.node_port_max, source = local.pub_lb_nsg_id, source_type = local.rule_type_nsg,
+      },
+      "Allow UDP ingress to workers from public load balancers" : {
+        protocol = local.udp_protocol, port_min = local.node_port_min, port_max = local.node_port_max, source = local.pub_lb_nsg_id, source_type = local.rule_type_nsg,
       },
       "Allow TCP ingress to workers for health check from public load balancers" : {
         protocol = local.tcp_protocol, port = local.health_check_port, source = local.pub_lb_nsg_id, source_type = local.rule_type_nsg,
