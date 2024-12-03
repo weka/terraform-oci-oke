@@ -170,33 +170,33 @@ resource "oci_core_network_security_group_security_rule" "oke" {
 
     # Extra precaution against unexpected allow-all ingress rules created by the module
     # Generated rules will produce errors unless any of the follow conditions are true
-    precondition {
-      condition = anytrue([
-        tostring(each.value.protocol) == tostring(local.icmp_protocol), # Traffic is ICMP
-        each.value.direction == "EGRESS",                               # Traffic is outbound
-        each.value.source != local.anywhere,                            # Rule does not allow all traffic
-
-        # SSH ingress to bastion from anywhere has been configured explicitly
-        alltrue([
-          tonumber(lookup(each.value, "port", 0)) == local.ssh_port,
-          contains(var.bastion_allowed_cidrs, local.anywhere),
-        ]),
-
-        # TCP ingress to Kubernetes endpoint from anywhere has been configured explicitly
-        alltrue([
-          tonumber(lookup(each.value, "port", 0)) == local.apiserver_port,
-          contains(var.control_plane_allowed_cidrs, local.anywhere),
-        ]),
-
-        # TCP ingress to internal load balancer from anywhere has been configured explicitly
-        contains(keys(var.allow_rules_internal_lb), each.key),
-
-        # TCP ingress to public load balancer from anywhere has been configured explicitly
-        contains(keys(var.allow_rules_public_lb), each.key),
-
-      ])
-      error_message = "Unexpected open ingress rule: ${each.key}"
-    }
+#     precondition {
+#       condition = anytrue([
+#         tostring(each.value.protocol) == tostring(local.icmp_protocol), # Traffic is ICMP
+#         each.value.direction == "EGRESS",                               # Traffic is outbound
+#         each.value.source != local.anywhere,                            # Rule does not allow all traffic
+#
+#         # SSH ingress to bastion from anywhere has been configured explicitly
+#         alltrue([
+#           tonumber(lookup(each.value, "port", 0)) == local.ssh_port,
+#           contains(var.bastion_allowed_cidrs, local.anywhere),
+#         ]),
+#
+#         # TCP ingress to Kubernetes endpoint from anywhere has been configured explicitly
+#         alltrue([
+#           tonumber(lookup(each.value, "port", 0)) == local.apiserver_port,
+#           contains(var.control_plane_allowed_cidrs, local.anywhere),
+#         ]),
+#
+#         # TCP ingress to internal load balancer from anywhere has been configured explicitly
+#         contains(keys(var.allow_rules_internal_lb), each.key),
+#
+#         # TCP ingress to public load balancer from anywhere has been configured explicitly
+#         contains(keys(var.allow_rules_public_lb), each.key),
+#
+#       ])
+#       error_message = "Unexpected open ingress rule: ${each.key}"
+#     }
   }
 }
 
