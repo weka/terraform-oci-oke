@@ -47,7 +47,7 @@ locals {
       },
 
       "Allow 14000" : {
-        protocol = local.tcp_protocol, port = 14000, source = local.worker_nsg_id, source_type = local.rule_type_cidr,
+        protocol = local.tcp_protocol, port = 14000, source = local.worker_nsg_id, source_type = local.rule_type_nsg,
       },
     },
 
